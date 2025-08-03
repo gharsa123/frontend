@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import QRCode from 'react-qr-code';
@@ -7,8 +7,12 @@ const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const InvoicePage = () => {
     const { invoiceId } = useParams();
+    const navigate = useNavigate();
+    const location = useLocation();
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    const isValidating = new URLSearchParams(location.search).get("validate");
 
     useEffect(() => {
         const fetchOrder = async () => {
@@ -23,6 +27,13 @@ const InvoicePage = () => {
         };
         fetchOrder();
     }, [invoiceId]);
+
+    useEffect(() => {
+        if (isValidating === "true") {
+            alert("✅ Invoice valid!");
+            navigate(`/invoice/${invoiceId}`, { replace: true });
+        }
+    }, [isValidating, navigate, invoiceId]);
 
     const handlePrint = () => {
         window.print();
@@ -48,7 +59,7 @@ const InvoicePage = () => {
                 <p className="text-xs text-gray-500 mb-4">Scan untuk validasi</p>
                 <div className="flex justify-center my-3">
                     <QRCode
-                        value={`https://yourdomain.com/invoice/${order.invoice_id}`}
+                        value={`https://frontend-lyart-ten-26.vercel.app/invoice/${order.invoice_id}?validate=true`}
                         size={96}
                     />
                 </div>
@@ -59,9 +70,9 @@ const InvoicePage = () => {
 
                 <hr className="my-3 border-t border-dashed border-gray-400" />
 
-                <div className="mb-1 flex justify-between">
-                    <p className='text-xs text-gray-500 mb-4'><strong>Order Name: </strong> {order.name}</p>
-                    <p className='text-xs text-gray-500 mb-4'><strong></strong> {order.invoice_id}</p>
+                <div className="mb-1 flex justify-between text-xs text-gray-500">
+                    <p><strong>Order Name:</strong> {order.name}</p>
+                    <p>{order.invoice_id}</p>
                 </div>
 
                 <div className="text-left text-xs text-gray-500 mb-4">
@@ -72,7 +83,8 @@ const InvoicePage = () => {
                         </div>
                     ))}
                 </div>
-                <div className="flex text-left text-xs text-gray-500 mb-4 justify-between">
+
+                <div className="flex justify-between text-left text-xs text-gray-500 mb-4">
                     <span>Total</span>
                     <span>Rp{order.total.toLocaleString()}</span>
                 </div>
@@ -81,14 +93,14 @@ const InvoicePage = () => {
 
                 <div className="flex justify-between text-left text-xs text-gray-500 mb-4">
                     <span>Closed</span>
-                    <span> {new Date(order.createdAt).toLocaleString('id-ID', {
+                    <span>{new Date(order.createdAt).toLocaleString('id-ID', {
                         dateStyle: 'medium',
                         timeStyle: 'short',
                     })}</span>
                 </div>
 
                 <p className="text-xs text-gray-500 italic mt-3">Terima kasih atas pesanan Anda!</p>
-                <p className="text-xs text-gray-500 italic mt-3">Salam Hangat "Pinukuik Abi Team"</p>
+                <p className="text-xs text-gray-500 italic">Salam Hangat "Pinukuik Abi Team"</p>
 
                 <button
                     onClick={handlePrint}
@@ -99,7 +111,6 @@ const InvoicePage = () => {
             </div>
         </div>
     );
-
 };
 
 export default InvoicePage;
